@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VIDEO VAULT — Encrypt Tool</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --yellow: #FFE600;
+    --black: #000000;
+    --white: #FFFFFF;
+    --gray-50: #FAFAFA;
+    --gray-100: #F2F2F2;
+    --gray-300: #D4D4D4;
+    --gray-500: #777777;
+  }
+  html, body { background: var(--gray-50); color: var(--black); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+  ::selection { background: var(--yellow); color: var(--black); }
+
+  .navbar {
+    background: var(--black);
+    color: var(--yellow);
+    padding: 18px 32px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 6px solid var(--yellow);
+  }
+  .navbar-mark {
+    width: 36px; height: 36px;
+    background: var(--yellow);
+    color: var(--black);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 18px;
+  }
+  .navbar h1 { font-size: 18px; font-weight: 900; color: var(--yellow); margin: 0; letter-spacing: 0.05em; }
+  .stripe-bar {
+    height: 6px;
+    background: repeating-linear-gradient(45deg, var(--yellow), var(--yellow) 12px, var(--black) 12px, var(--black) 24px);
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  .panel {
+    background: var(--white);
+    border: 3px solid var(--black);
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .panel-head {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+    padding-bottom: 14px; border-bottom: 3px solid var(--black);
+  }
+  .panel-num {
+    width: 32px; height: 32px;
+    background: var(--black); color: var(--yellow);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 14px;
+  }
+  .panel h2 { font-size: 16px; font-weight: 900; color: var(--black); margin: 0; letter-spacing: 0.02em; }
+  .panel-tag {
+    margin-left: auto; font-size: 10px; font-weight: 900;
+    background: var(--yellow); color: var(--black);
+    padding: 4px 10px; letter-spacing: 0.1em;
+  }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .field { margin-bottom: 14px; }
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--black);
+    margin-bottom: 6px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  input[type="text"], input[type="password"], input[type="date"] {
+    width: 100%;
+    padding: 13px 14px;
+    font-size: 15px;
+    background: var(--white);
+    border: 2px solid var(--black);
+    color: var(--black);
+    outline: none;
+    font-weight: 600;
+    transition: background 0.15s;
+  }
+  input:focus { background: var(--yellow); }
+  input::placeholder { color: var(--gray-300); font-weight: 500; }
+
+  .upload-zone {
+    border: 3px dashed var(--black);
+    padding: 36px;
+    text-align: center;
+    transition: background 0.2s;
+    background: var(--white);
+    cursor: pointer;
+  }
+  .upload-zone.dragover { background: var(--yellow); }
+  .upload-zone p { font-size: 14px; color: var(--black); font-weight: 700; margin: 0; }
+  .file-info {
+    margin-top: 14px;
+    padding: 12px;
+    background: var(--yellow);
+    color: var(--black);
+    font-weight: 700;
+    font-size: 13px;
+  }
+  button {
+    width: 100%;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 900;
+    background: var(--yellow);
+    color: var(--black);
+    border: 2px solid var(--black);
+    cursor: pointer;
+    margin-top: 8px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: transform 0.1s;
+  }
+  button:hover { background: var(--black); color: var(--yellow); }
+  button:active { transform: translate(2px, 2px); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary { background: var(--white); }
+  button.secondary:hover { background: var(--black); color: var(--white); }
+  .arrow::after { content: '→'; margin-left: 8px; }
+
+  .progress {
+    height: 8px;
+    background: var(--gray-100);
+    margin-top: 10px;
+    border: 2px solid var(--black);
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--yellow);
+    width: 0%;
+    transition: width 0.2s;
+  }
+
+  .result-box {
+    margin-top: 20px;
+    padding: 18px;
+    background: var(--black);
+    color: var(--yellow);
+  }
+  .result-box h3 { font-size: 13px; font-weight: 900; margin-bottom: 10px; letter-spacing: 0.08em; }
+  .result-box pre {
+    background: var(--white);
+    color: var(--black);
+    padding: 14px;
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 12px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .result-box .actions { display: flex; gap: 8px; margin-top: 12px; }
+  .result-box button { width: auto; padding: 8px 14px; margin: 0; font-size: 11px; }
+
+  .hint {
+    background: var(--yellow);
+    border: 2px solid var(--black);
+    padding: 14px 16px;
+    font-size: 12px;
+    color: var(--black);
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+  .hint strong { font-weight: 900; }
+  .hint code {
+    background: var(--black);
+    color: var(--yellow);
+    padding: 2px 6px;
+    font-family: 'SF Mono', Menlo, monospace;
+  }
+</style>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="navbar-mark">🔐</div>
+  <h1>VIDEO VAULT / ENCRYPT</h1>
+</div>
+<div class="stripe-bar"></div>
+
+<div class="container">
+
+  <div class="hint">
+    <strong>📌 使い方:</strong> 動画ファイルを選んで「暗号化」を押すと <code>.enc</code> ファイルとマニフェスト用JSONが生成されます。両方をリポジトリに反映してください。<br><br>
+    <strong>⚠️ 動画は100MB以下推奨</strong>。GitHubの単一ファイル制限です。
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-num">01</div>
+      <h2>動画情報</h2>
+      <span class="panel-tag">META</span>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>動画ID（URLに使う）</label>
+        <input type="text" id="vidId" placeholder="vid001" pattern="[a-zA-Z0-9_-]+" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>タイトル</label>
+        <input type="text" id="vidTitle" placeholder="商品紹介動画A" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>パスワード</label>
+        <input type="text" id="vidPassword" placeholder="hello123" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>有効期限（任意）</label>
+        <input type="date" id="vidExpires">
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-num">02</div>
+      <h2>動画ファイル</h2>
+      <span class="panel-tag">FILE</span>
+    </div>
+    <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <p>動画ファイルをドラッグ＆ドロップ、またはクリックで選択</p>
+      <input type="file" id="fileInput" accept="video/*" style="display:none;">
+      <div id="fileInfo" class="file-info" style="display:none;"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-num">03</div>
+      <h2>暗号化を実行</h2>
+      <span class="panel-tag">ENCRYPT</span>
+    </div>
+    <button id="encryptBtn" disabled><span class="arrow">暗号化を開始</span></button>
+    <div id="encStatus" style="margin-top:12px; font-size:12px; color:var(--black); font-weight:700;"></div>
+    <div class="progress" style="display:none;" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
+
+    <div id="resultBox" style="display:none;" class="result-box">
+      <h3>✓ 暗号化完了</h3>
+      <p style="font-size:12px; color:var(--white); margin-bottom:14px;">
+        以下の2つを実行してください：
+      </p>
+      <p style="font-size:12px; color:var(--yellow); font-weight:900; margin-bottom:6px;">
+        ① <span style="background:var(--yellow); color:var(--black); padding:2px 8px;">.enc ファイル</span> をDLしてリポジトリの <code style="background:var(--white); color:var(--black); padding:2px 6px;">videos/</code> に置く
+      </p>
+      <p style="font-size:12px; color:var(--yellow); font-weight:900; margin-bottom:14px;">
+        ② 下記JSONを <code style="background:var(--white); color:var(--black); padding:2px 6px;">manifest.json</code> の <code style="background:var(--white); color:var(--black); padding:2px 6px;">videos</code> 配列に追加
+      </p>
+      <pre id="manifestJson"></pre>
+      <div class="actions">
+        <button class="secondary" type="button" onclick="downloadEncFile()" style="background:var(--yellow);">.enc ファイルをDL</button>
+        <button class="secondary" type="button" onclick="copyManifest()" style="background:var(--white);">JSONをコピー</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+let selectedFile = null;
+let encryptedBlob = null;
+let encryptedFilename = null;
+
+const dropZone = $('#dropZone');
+const fileInput = $('#fileInput');
+
+['dragenter','dragover'].forEach(ev => dropZone.addEventListener(ev, (e) => {
+  e.preventDefault(); e.stopPropagation();
+  dropZone.classList.add('dragover');
+}));
+['dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, (e) => {
+  e.preventDefault(); e.stopPropagation();
+  dropZone.classList.remove('dragover');
+}));
+dropZone.addEventListener('drop', (e) => {
+  if (e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files.length) handleFileSelect(e.target.files[0]);
+});
+
+function handleFileSelect(file) {
+  selectedFile = file;
+  const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+  const warning = file.size > 100 * 1024 * 1024 ? '<br>⚠ 100MB超え：GitHubの制限に注意' : '';
+  $('#fileInfo').innerHTML = '📁 ' + file.name + '（' + sizeMB + ' MB）' + warning;
+  $('#fileInfo').style.display = 'block';
+  $('#encryptBtn').disabled = false;
+}
+
+// Bytes → Base64
+function bytesToB64(bytes) {
+  let bin = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return btoa(bin);
+}
+
+async function deriveKey(password, salt) {
+  const enc = new TextEncoder();
+  const baseKey = await crypto.subtle.importKey(
+    'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
+  );
+  return await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' },
+    baseKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt']
+  );
+}
+
+$('#encryptBtn').addEventListener('click', async () => {
+  const id = $('#vidId').value.trim();
+  const title = $('#vidTitle').value.trim();
+  const password = $('#vidPassword').value;
+  const expiresAt = $('#vidExpires').value || null;
+
+  if (!id) { alert('動画IDを入力してください'); return; }
+  if (!/^[a-zA-Z0-9_-]+$/.test(id)) { alert('動画IDは半角英数・ハイフン・アンダースコアのみ'); return; }
+  if (!title) { alert('タイトルを入力してください'); return; }
+  if (!password) { alert('パスワードを入力してください'); return; }
+  if (!selectedFile) { alert('動画ファイルを選んでください'); return; }
+
+  const btn = $('#encryptBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span>処理中...</span>';
+  $('#progressWrap').style.display = 'block';
+  $('#progressBar').style.width = '0%';
+  $('#resultBox').style.display = 'none';
+
+  try {
+    // 1. ファイル読み込み
+    $('#encStatus').textContent = 'ファイル読み込み中...';
+    $('#progressBar').style.width = '20%';
+    const arrayBuffer = await selectedFile.arrayBuffer();
+
+    // 2. Salt と IV 生成
+    $('#encStatus').textContent = '鍵を生成中...';
+    $('#progressBar').style.width = '40%';
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(password, salt);
+
+    // 3. 暗号化
+    $('#encStatus').textContent = '暗号化中...';
+    $('#progressBar').style.width = '70%';
+    const encrypted = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: iv },
+      key,
+      arrayBuffer
+    );
+
+    $('#progressBar').style.width = '95%';
+
+    // 4. 結果生成
+    encryptedBlob = new Blob([encrypted], { type: 'application/octet-stream' });
+    encryptedFilename = id + '.enc';
+
+    const manifestEntry = {
+      id: id,
+      title: title,
+      file: 'videos/' + encryptedFilename,
+      salt: bytesToB64(salt),
+      iv: bytesToB64(iv),
+      contentType: selectedFile.type || 'video/mp4',
+      expiresAt: expiresAt,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+
+    $('#manifestJson').textContent = JSON.stringify(manifestEntry, null, 2);
+    $('#progressBar').style.width = '100%';
+    $('#encStatus').innerHTML = '<span style="background:var(--yellow); padding:4px 10px; font-weight:900;">✓ 暗号化完了</span>';
+    $('#resultBox').style.display = 'block';
+
+    btn.innerHTML = '<span class="arrow">もう一度暗号化する</span>';
+    btn.disabled = false;
+  } catch (err) {
+    console.error(err);
+    $('#encStatus').innerHTML = '<span style="background:var(--black); color:var(--yellow); padding:4px 10px; font-weight:900;">エラー: ' + err.message + '</span>';
+    btn.innerHTML = '<span class="arrow">もう一度試す</span>';
+    btn.disabled = false;
+  }
+});
+
+function downloadEncFile() {
+  if (!encryptedBlob || !encryptedFilename) return;
+  const url = URL.createObjectURL(encryptedBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = encryptedFilename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function copyManifest() {
+  const text = $('#manifestJson').textContent;
+  navigator.clipboard.writeText(text).then(() => alert('JSONをコピーしました'));
+}
+</script>
+</body>
+</html>

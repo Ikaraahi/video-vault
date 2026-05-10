@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VIDEO VAULT</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --yellow: #FFE600;
+    --yellow-deep: #FFD400;
+    --black: #000000;
+    --white: #FFFFFF;
+    --gray-50: #FAFAFA;
+    --gray-100: #F2F2F2;
+    --gray-300: #D4D4D4;
+    --gray-500: #777777;
+  }
+  html, body { background: var(--white); color: var(--black); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+  ::selection { background: var(--yellow); color: var(--black); }
+
+  .center { display: flex; align-items: center; justify-content: center; padding: 24px; min-height: 100vh; }
+  .card-wrap { position: relative; z-index: 1; max-width: 460px; width: 100%; }
+  .card {
+    background: var(--white);
+    border: 3px solid var(--black);
+    padding: 48px 40px 40px;
+    width: 100%;
+    position: relative;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    transform: translate(8px, 8px);
+    background: var(--yellow);
+    z-index: -1;
+  }
+  .stripe {
+    height: 8px;
+    background: repeating-linear-gradient(45deg, var(--yellow), var(--yellow) 8px, var(--black) 8px, var(--black) 16px);
+    margin-bottom: 24px;
+  }
+  .eyebrow {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    background: var(--black);
+    color: var(--yellow);
+    padding: 4px 10px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+  h1 {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--black);
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+  h1 .accent {
+    background: linear-gradient(transparent 60%, var(--yellow) 60%);
+    padding: 0 4px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-bottom: 28px;
+    font-weight: 500;
+  }
+  .field { margin-bottom: 14px; }
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--black);
+    margin-bottom: 6px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  input[type="password"], input[type="text"] {
+    width: 100%;
+    padding: 13px 14px;
+    font-size: 15px;
+    background: var(--white);
+    border: 2px solid var(--black);
+    color: var(--black);
+    outline: none;
+    font-weight: 600;
+    transition: background 0.15s;
+  }
+  input:focus { background: var(--yellow); }
+  input::placeholder { color: var(--gray-300); font-weight: 500; }
+  button {
+    width: 100%;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 900;
+    background: var(--yellow);
+    color: var(--black);
+    border: 2px solid var(--black);
+    cursor: pointer;
+    margin-top: 8px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: transform 0.1s, box-shadow 0.15s;
+  }
+  button:hover { background: var(--black); color: var(--yellow); }
+  button:active { transform: translate(2px, 2px); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .arrow::after { content: '→'; margin-left: 8px; display: inline-block; transition: transform 0.15s; }
+  button:hover .arrow::after { transform: translateX(4px); }
+  .error {
+    background: var(--black);
+    color: var(--yellow);
+    padding: 11px 14px;
+    font-size: 13px;
+    margin-bottom: 18px;
+    text-align: center;
+    font-weight: 700;
+    border-left: 6px solid var(--yellow);
+  }
+  .progress-info {
+    background: var(--yellow);
+    color: var(--black);
+    padding: 11px 14px;
+    font-size: 13px;
+    margin-bottom: 18px;
+    font-weight: 700;
+    border-left: 6px solid var(--black);
+  }
+  .progress {
+    height: 8px;
+    background: var(--gray-100);
+    margin-top: 8px;
+    border: 2px solid var(--black);
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--black);
+    width: 0%;
+    transition: width 0.2s;
+  }
+
+  /* プレイヤーレイアウト */
+  body.playing { background: var(--black); color: var(--white); -webkit-user-select: none; user-select: none; }
+  .player-shell { display: none; flex-direction: column; min-height: 100vh; }
+  body.playing .player-shell { display: flex; }
+  body.playing .center { display: none; }
+  .header {
+    padding: 18px 28px;
+    background: var(--yellow);
+    color: var(--black);
+    border-bottom: 4px solid var(--black);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .header-mark {
+    width: 36px; height: 36px;
+    background: var(--black);
+    color: var(--yellow);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 900;
+  }
+  .header h1 { font-size: 16px; font-weight: 900; color: var(--black); margin: 0; flex: 1; letter-spacing: 0.02em; text-align: left; }
+  .header h1 .accent { background: none; padding: 0; }
+  .header .badge {
+    font-size: 10px; font-weight: 900; padding: 4px 10px;
+    background: var(--black); color: var(--yellow);
+    letter-spacing: 0.15em;
+  }
+  .player-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px; }
+  .player {
+    width: 100%; max-width: 1400px; aspect-ratio: 16/9;
+    background: #000;
+    border: 4px solid var(--yellow);
+    overflow: hidden;
+  }
+  video { width: 100%; height: 100%; display: block; }
+  .footer {
+    padding: 14px 28px;
+    background: var(--white);
+    color: var(--black);
+    font-size: 11px;
+    text-align: center;
+    border-top: 4px solid var(--yellow);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<!-- パス入力ページ -->
+<div class="center">
+  <div class="card-wrap">
+    <div class="card">
+      <div class="stripe"></div>
+      <span class="eyebrow" id="eyebrow">🔒 PROTECTED VIDEO</span>
+      <h1><span class="accent" id="title">読み込み中...</span></h1>
+      <p class="subtitle" id="subtitle">視聴にはパスワードが必要です</p>
+
+      <div id="errorBox" style="display:none;" class="error"></div>
+      <div id="progressBox" style="display:none;" class="progress-info">
+        <div id="progressLabel">復号中...</div>
+        <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+      </div>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="password">PASSWORD</label>
+          <input type="password" id="password" autocomplete="off" autofocus required placeholder="パスワードを入力">
+        </div>
+        <button type="submit" id="submitBtn"><span class="arrow">視聴する</span></button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- プレイヤー -->
+<div class="player-shell">
+  <div class="header">
+    <div class="header-mark">▶</div>
+    <h1 id="playerTitle"></h1>
+    <span class="badge">DECRYPTED</span>
+  </div>
+  <div class="player-wrapper">
+    <div class="player">
+      <video id="videoPlayer" controls controlsList="nodownload noplaybackrate" disablePictureInPicture autoplay></video>
+    </div>
+  </div>
+  <div class="footer">⚠ この動画は無断複製・転載を禁じます — VIDEO VAULT</div>
+</div>
+
+<script>
+// ===========================================
+// 動画パスワード保護システム（GitHub Pages版）
+// クライアントサイドAES-256-GCM復号
+// ===========================================
+
+const $ = (s) => document.querySelector(s);
+
+// URLから動画ID取得
+const params = new URLSearchParams(location.search);
+const videoId = params.get('id');
+
+let videoMeta = null;
+
+(async function init() {
+  if (!videoId) {
+    showError('動画IDが指定されていません', 'URLに ?id=XXX を付けてアクセスしてください。');
+    return;
+  }
+
+  try {
+    const res = await fetch('manifest.json?t=' + Date.now());
+    if (!res.ok) throw new Error('manifest.json not found');
+    const manifest = await res.json();
+    videoMeta = manifest.videos.find(v => v.id === videoId);
+
+    if (!videoMeta) {
+      showError('動画が見つかりません', '指定されたIDの動画は登録されていません。');
+      return;
+    }
+
+    // 期限チェック
+    if (videoMeta.expiresAt) {
+      const exp = new Date(videoMeta.expiresAt);
+      exp.setHours(23, 59, 59, 999);
+      if (Date.now() > exp.getTime()) {
+        showError('視聴期限が切れています', 'この動画の視聴可能期間は終了しました。');
+        return;
+      }
+    }
+
+    $('#title').textContent = videoMeta.title;
+    $('#subtitle').textContent = '視聴にはパスワードが必要です';
+  } catch (e) {
+    console.error(e);
+    showError('読み込みエラー', 'manifest.json の読み込みに失敗しました。');
+  }
+})();
+
+function showError(title, msg) {
+  $('#title').textContent = title;
+  $('#subtitle').textContent = msg;
+  $('#eyebrow').textContent = '⚠ ERROR';
+  $('#eyebrow').style.background = 'var(--black)';
+  $('#loginForm').style.display = 'none';
+}
+
+function showInlineError(msg) {
+  const box = $('#errorBox');
+  box.textContent = msg;
+  box.style.display = 'block';
+}
+
+function hideInlineError() {
+  $('#errorBox').style.display = 'none';
+}
+
+function showProgress(label) {
+  $('#progressLabel').textContent = label;
+  $('#progressBox').style.display = 'block';
+  $('#progressBar').style.width = '0%';
+}
+
+function setProgress(pct, label) {
+  $('#progressBar').style.width = pct + '%';
+  if (label) $('#progressLabel').textContent = label;
+}
+
+function hideProgress() {
+  $('#progressBox').style.display = 'none';
+}
+
+// PBKDF2 で鍵導出
+async function deriveKey(password, salt) {
+  const enc = new TextEncoder();
+  const baseKey = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(password),
+    'PBKDF2',
+    false,
+    ['deriveKey']
+  );
+  return await crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt: salt,
+      iterations: 100000,
+      hash: 'SHA-256'
+    },
+    baseKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['decrypt']
+  );
+}
+
+// Base64 → ArrayBuffer
+function b64ToBytes(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+// 視聴処理
+$('#loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  hideInlineError();
+
+  const password = $('#password').value;
+  const submitBtn = $('#submitBtn');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span>処理中...</span>';
+
+  try {
+    // 1. 暗号化動画をフェッチ
+    showProgress('暗号化動画をダウンロード中...');
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', videoMeta.file, true);
+    xhr.responseType = 'arraybuffer';
+
+    const encryptedData = await new Promise((resolve, reject) => {
+      xhr.onprogress = (ev) => {
+        if (ev.lengthComputable) {
+          const pct = (ev.loaded / ev.total * 100).toFixed(1);
+          setProgress(pct, 'ダウンロード中... ' + pct + '%');
+        }
+      };
+      xhr.onload = () => xhr.status === 200 ? resolve(xhr.response) : reject(new Error('Download failed: ' + xhr.status));
+      xhr.onerror = () => reject(new Error('Network error'));
+      xhr.send();
+    });
+
+    // 2. 鍵を導出
+    setProgress(50, '鍵を生成中...');
+    const salt = b64ToBytes(videoMeta.salt);
+    const iv = b64ToBytes(videoMeta.iv);
+    const key = await deriveKey(password, salt);
+
+    // 3. 復号
+    setProgress(70, '復号中...');
+    let decrypted;
+    try {
+      decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: iv },
+        key,
+        encryptedData
+      );
+    } catch (decErr) {
+      throw new Error('パスワードが違います');
+    }
+
+    setProgress(95, '再生準備中...');
+
+    // 4. Blob URL作って再生
+    const blob = new Blob([decrypted], { type: videoMeta.contentType || 'video/mp4' });
+    const url = URL.createObjectURL(blob);
+
+    setProgress(100, '完了');
+    setTimeout(() => {
+      hideProgress();
+      $('#playerTitle').textContent = videoMeta.title;
+      $('#videoPlayer').src = url;
+      document.body.classList.add('playing');
+      document.title = videoMeta.title;
+    }, 300);
+
+  } catch (err) {
+    hideProgress();
+    showInlineError(err.message || '復号に失敗しました');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<span class="arrow">視聴する</span>';
+  }
+});
+
+// 開発者ツールの簡易抑制
+document.addEventListener('keydown', (e) => {
+  if (document.body.classList.contains('playing')) {
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key))) e.preventDefault();
+  }
+});
+document.addEventListener('contextmenu', (e) => {
+  if (document.body.classList.contains('playing')) e.preventDefault();
+});
+</script>
+</body>
+</html>
