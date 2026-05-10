@@ -1,3 +1,14 @@
 {
-  "videos": []
+  "videos": [
+    {
+      "id": "cxo_igarashi",
+      "title": "CxO五十嵐",
+      "file": "videos/cxo_igarashi.enc",
+      "salt": "Geop+TPwomK37da2VWLZNg==",
+      "iv": "B3EumGfQkZwOtgLc",
+      "contentType": "video/mp4",
+      "expiresAt": null,
+      "createdAt": "2026-05-10"
+    }
+  ]
 }
