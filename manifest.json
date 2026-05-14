@@ -9,6 +9,16 @@
       "contentType": "video/mp4",
       "expiresAt": null,
       "createdAt": "2026-05-10"
+    },
+    {
+      "id": "cxo_takiishi",
+      "title": "CXO Growth 自己紹介【瀧石】",
+      "file": "videos/cxo_takiishi.enc",
+      "salt": "o+TT++6F++H/7JmfcMbX5A==",
+      "iv": "mvE3l3U91gDzqjGW",
+      "contentType": "video/mp4",
+      "expiresAt": null,
+      "createdAt": "2026-05-14"
     }
   ]
 }
