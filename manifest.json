@@ -29,6 +29,16 @@
       "contentType": "video/mp4",
       "expiresAt": null,
       "createdAt": "2026-05-20"
+    },
+    {
+      "id": "cxo_matsuura",
+      "title": "CXO Growth 自己紹介【松浦】",
+      "file": "videos/cxo_matsuura.enc",
+      "salt": "tt4yWEZK47DZz3r4KvkD+Q==",
+      "iv": "xX7uPQTMlJh2MG1M",
+      "contentType": "video/mp4",
+      "expiresAt": null,
+      "createdAt": "2026-05-20"
     }
   ]
 }
